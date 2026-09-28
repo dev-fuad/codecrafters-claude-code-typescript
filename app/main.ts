@@ -63,10 +63,10 @@ async function main() {
   const message = response.choices.find((choice) => choice.finish_reason === "tool_calls")?.message;
 
   if (message?.tool_calls) {
-    message.tool_calls.forEach((tool_call) => {
+    message.tool_calls.forEach(async (tool_call) => {
       if (tool_call.type === "function" && tool_call.function.name === ReadTool.function.name) {
         const parameters = JSON.parse(tool_call.function.arguments);
-        const fileContent = toolFunctions[ReadTool.function.name](parameters.file_path);
+        const fileContent = await toolFunctions[ReadTool.function.name](parameters.file_path);
         console.log(fileContent);
       }
     });
