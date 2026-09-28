@@ -1,3 +1,4 @@
+import { $ } from "bun";
 import OpenAI from "openai";
 import type {
   ChatCompletionFunctionTool,
@@ -44,6 +45,24 @@ const WriteTool: ChatCompletionFunctionTool = {
   },
 };
 
+const BashTool: ChatCompletionFunctionTool = {
+  type: "function",
+  function: {
+    name: "Bash",
+    description: "Execute a shell command",
+    parameters: {
+      type: "object",
+      required: ["command"],
+      properties: {
+        command: {
+          type: "string",
+          description: "The command to execute",
+        },
+      },
+    },
+  },
+};
+
 const toolFunctions = {
   [ReadTool.function.name]: async ({ file_path }: { file_path: string }) => {
     const file = Bun.file(file_path);
@@ -56,10 +75,15 @@ const toolFunctions = {
     file_path: string;
     content: string;
   }) => {
-    console.error("wrinting...", content);
     await Bun.write(file_path, content);
-    console.error("written", file_path);
     return content;
+  },
+  [BashTool.function.name]: async ({ command }: { command: string }) => {
+    const { stdout, stderr, exitCode } = await $`bash -c "${command}"`.nothrow().quiet();
+    if (exitCode !== 0) {
+      return stderr.toString();
+    }
+    return stdout.toString();
   },
 };
 
@@ -91,7 +115,7 @@ async function main() {
       const response = await client.chat.completions.create({
         model: "anthropic/claude-haiku-4.5",
         messages,
-        tools: [ReadTool, WriteTool],
+        tools: [ReadTool, WriteTool, BashTool],
       });
 
       if (!response.choices || response.choices.length === 0) {
@@ -108,8 +132,8 @@ async function main() {
         message.tool_calls.forEach(async (tool_call) => {
           if (tool_call.type === "function") {
             const parameters = JSON.parse(tool_call.function.arguments);
-            console.error("tool", tool_call.function.name, parameters);
-            const fileContent = await toolFunctions[tool_call.function.name]?.(parameters);
+            const fileContent =
+              await toolFunctions[tool_call.function.name]?.(parameters);
             // console.log(fileContent);
             messages.push({
               role: "tool",
