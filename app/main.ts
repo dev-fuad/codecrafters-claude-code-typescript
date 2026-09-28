@@ -91,7 +91,7 @@ async function main() {
       const response = await client.chat.completions.create({
         model: "anthropic/claude-haiku-4.5",
         messages,
-        tools: [ReadTool],
+        tools: [ReadTool, WriteTool],
       });
 
       if (!response.choices || response.choices.length === 0) {
