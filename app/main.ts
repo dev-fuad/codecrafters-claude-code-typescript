@@ -57,9 +57,6 @@ async function main() {
   // You can use print statements as follows for debugging, they'll be visible when running tests.
   console.error("Logs from your program will appear here!");
 
-  // TODO: Uncomment the lines below to pass the first stage
-  // console.log(response.choices[0].message.content);
-
   const message = response.choices.find((choice) => choice.finish_reason === "tool_calls")?.message;
 
   if (message?.tool_calls) {
@@ -70,6 +67,8 @@ async function main() {
         console.log(fileContent);
       }
     });
+  } else {
+    console.log(response.choices[0].message.content);
   }
 }
 
