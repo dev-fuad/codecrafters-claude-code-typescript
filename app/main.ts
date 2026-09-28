@@ -50,42 +50,42 @@ async function main() {
 
   while (true) {
     console.error(messages);
-    const response = await client.chat.completions.create({
-      model: "anthropic/claude-haiku-4.5",
-      messages,
-      tools: [ReadTool],
-    });
-
-    if (!response.choices || response.choices.length === 0) {
-      throw new Error("no choices in response");
-    }
-
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
-    console.error("Logs from your program will appear here!");
-
-    const message = response.choices[0]?.message;
-    messages.push({
-      role: "assistant",
-      content: message.content ?? null,
-      ...(message.tool_calls ? { tool_calls: message.tool_calls } : {}),
-    });
-
-    if (message?.tool_calls && message.tool_calls.length > 0) {
-      message.tool_calls.forEach(async (tool_call) => {
-        if (tool_call.type === "function" && tool_call.function.name === ReadTool.function.name) {
-          const parameters = JSON.parse(tool_call.function.arguments);
-          const fileContent = await toolFunctions[ReadTool.function.name](parameters.file_path);
-          // console.log(fileContent);
-          messages.push({
-            role: "tool",
-            tool_call_id: tool_call.id,
-            content: fileContent,
-          });
-        }
+    try {
+      const response = await client.chat.completions.create({
+        model: "anthropic/claude-haiku-4.5",
+        messages,
+        tools: [ReadTool],
       });
-    } else {
-      console.log(response.choices[0].message.content);
-      break;
+
+      if (!response.choices || response.choices.length === 0) {
+        throw new Error("no choices in response");
+      }
+
+      // You can use print statements as follows for debugging, they'll be visible when running tests.
+      console.error("Logs from your program will appear here!");
+
+      const message = response.choices[0]?.message;
+      messages.push(message);
+
+      if (message?.tool_calls && message.tool_calls.length > 0) {
+        message.tool_calls.forEach(async (tool_call) => {
+          if (tool_call.type === "function" && tool_call.function.name === ReadTool.function.name) {
+            const parameters = JSON.parse(tool_call.function.arguments);
+            const fileContent = await toolFunctions[ReadTool.function.name](parameters.file_path);
+            // console.log(fileContent);
+            messages.push({
+              role: "tool",
+              tool_call_id: tool_call.id,
+              content: fileContent,
+            });
+          }
+        });
+      } else {
+        console.log(response.choices[0].message.content);
+        break;
+      }
+    } catch (error) {
+      console.error('Error', error); 
     }
   }
 }
