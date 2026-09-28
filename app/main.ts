@@ -64,7 +64,11 @@ async function main() {
     console.error("Logs from your program will appear here!");
 
     const message = response.choices[0]?.message;
-    messages.push(message);
+    messages.push({
+      role: "assistant",
+      content: message.content ?? null,
+      ...(message.tool_calls ? { tool_calls: message.tool_calls } : {}),
+    });
 
     if (message?.tool_calls && message.tool_calls.length > 0) {
       message.tool_calls.forEach(async (tool_call) => {
