@@ -56,7 +56,9 @@ const toolFunctions = {
     file_path: string;
     content: string;
   }) => {
+    console.error("wrinting...", content);
     await Bun.write(file_path, content);
+    console.error("written", file_path);
     return content;
   },
 };
