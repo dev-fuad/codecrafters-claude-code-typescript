@@ -1,5 +1,30 @@
 import OpenAI from "openai";
-import type { ChatCompletionTool } from "openai/resources";
+import type { ChatCompletionFunctionTool } from "openai/resources";
+
+const ReadTool: ChatCompletionFunctionTool = {
+  type: "function",
+  function: {
+    name: "Read",
+    description: "Read and return the contents of a file",
+    parameters: {
+      type: "object",
+      properties: {
+        file_path: {
+          type: "string",
+          description: "The path to the file to read",
+        },
+      },
+      required: ["file_path"],
+    },
+  },
+};
+
+const toolFunctions = {
+  [ReadTool.function.name]: async (filePath: string) => {
+    const file = Bun.file(filePath);
+    return await file.text();
+  },
+};
 
 async function main() {
   const [, , flag, prompt] = process.argv;
@@ -19,28 +44,10 @@ async function main() {
     baseURL: baseURL,
   });
 
-  const readTool: ChatCompletionTool = {
-    type: "function",
-    function: {
-      name: "Read",
-      description: "Read and return the contents of a file",
-      parameters: {
-        type: "object",
-        properties: {
-          file_path: {
-            type: "string",
-            description: "The path to the file to read",
-          },
-        },
-        required: ["file_path"],
-      },
-    },
-  };
-
   const response = await client.chat.completions.create({
     model: "anthropic/claude-haiku-4.5",
     messages: [{ role: "user", content: prompt }],
-    tools: [readTool],
+    tools: [ReadTool],
   });
 
   if (!response.choices || response.choices.length === 0) {
@@ -52,6 +59,18 @@ async function main() {
 
   // TODO: Uncomment the lines below to pass the first stage
   console.log(response.choices[0].message.content);
+
+  const message = response.choices.find((choice) => choice.finish_reason === "tool_calls")?.message;
+
+  if (message?.tool_calls) {
+    message.tool_calls.forEach((tool_call) => {
+      if (tool_call.type === "function" && tool_call.function.name === ReadTool.function.name) {
+        const parameters = JSON.parse(tool_call.function.arguments);
+        const fileContent = toolFunctions[ReadTool.function.name](parameters.file_path);
+        console.log(fileContent);
+      }
+    });
+  }
 }
 
 main();
