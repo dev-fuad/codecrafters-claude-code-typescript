@@ -1,5 +1,8 @@
 import OpenAI from "openai";
-import type { ChatCompletionFunctionTool, ChatCompletionMessageParam } from "openai/resources";
+import type {
+  ChatCompletionFunctionTool,
+  ChatCompletionMessageParam,
+} from "openai/resources";
 
 const ReadTool: ChatCompletionFunctionTool = {
   type: "function",
@@ -19,10 +22,42 @@ const ReadTool: ChatCompletionFunctionTool = {
   },
 };
 
+const WriteTool: ChatCompletionFunctionTool = {
+  type: "function",
+  function: {
+    name: "Write",
+    description: "Write content to a file",
+    parameters: {
+      type: "object",
+      properties: {
+        file_path: {
+          type: "string",
+          description: "The path of the file to write to",
+        },
+        content: {
+          type: "string",
+          description: "The content to write to the file",
+        },
+      },
+      required: ["file_path", "content"],
+    },
+  },
+};
+
 const toolFunctions = {
-  [ReadTool.function.name]: async (filePath: string) => {
-    const file = Bun.file(filePath);
+  [ReadTool.function.name]: async ({ file_path }: { file_path: string }) => {
+    const file = Bun.file(file_path);
     return await file.text();
+  },
+  [WriteTool.function.name]: async ({
+    file_path,
+    content,
+  }: {
+    file_path: string;
+    content: string;
+  }) => {
+    await Bun.write(file_path, content);
+    return content;
   },
 };
 
@@ -69,9 +104,9 @@ async function main() {
 
       if (message?.tool_calls && message.tool_calls.length > 0) {
         message.tool_calls.forEach(async (tool_call) => {
-          if (tool_call.type === "function" && tool_call.function.name === ReadTool.function.name) {
+          if (tool_call.type === "function") {
             const parameters = JSON.parse(tool_call.function.arguments);
-            const fileContent = await toolFunctions[ReadTool.function.name](parameters.file_path);
+            const fileContent = await toolFunctions[tool_call.function.name]?.(parameters);
             // console.log(fileContent);
             messages.push({
               role: "tool",
@@ -85,7 +120,7 @@ async function main() {
         break;
       }
     } catch (error) {
-      console.error('Error', error); 
+      console.error("Error", error);
     }
   }
 }
