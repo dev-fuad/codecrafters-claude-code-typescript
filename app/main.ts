@@ -108,6 +108,7 @@ async function main() {
         message.tool_calls.forEach(async (tool_call) => {
           if (tool_call.type === "function") {
             const parameters = JSON.parse(tool_call.function.arguments);
+            console.error("tool", tool_call.function.name, parameters);
             const fileContent = await toolFunctions[tool_call.function.name]?.(parameters);
             // console.log(fileContent);
             messages.push({
