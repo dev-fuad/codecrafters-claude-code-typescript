@@ -2,6 +2,7 @@ import type { ChatCompletionMessageParam } from "openai/resources";
 import type { Skill } from "./skills";
 
 export const parsePrompt = (content: string, skills: Skill[]): ChatCompletionMessageParam[] => {
+  console.error('>>>', content, skills);
   if (content.startsWith("/")) {
     const tokens = content
       .slice(1)
@@ -20,17 +21,19 @@ export const parsePrompt = (content: string, skills: Skill[]): ChatCompletionMes
       }
       break;
     }
-    
+    console.error('>>>', skillsUsed);
     const args = tokens.slice(skillsUsed.length);
     if (skillsUsed.length > 0) {
       const messages: ChatCompletionMessageParam[] = skillsUsed.map((skillUsed) => ({
         role: "user",
         content: replaceArguments(skillUsed.body, args),
       }));
+      console.error('>>>', messages);
       return messages;
     }
   }
 
+  console.error('>>>', content);
   return [{ role: "user", content }];
 };
 
