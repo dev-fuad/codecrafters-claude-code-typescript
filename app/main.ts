@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources";
 import { toolFunctions, tools } from "./tools";
 import { getSkillsPrompt, listSkills } from "./skills";
+import { parsePrompt } from "./parsePrompt";
 
 async function main() {
   const [, , flag, prompt] = process.argv;
@@ -27,11 +28,10 @@ async function main() {
   const skillsPrompt = getSkillsPrompt(skills);
 
   if (skillsPrompt) {
-    console.error(skillsPrompt);
     messages.push({ role: "system", content: skillsPrompt });
   }
 
-  messages.push({ role: "user", content: prompt });
+  messages.push({ role: "user", content: parsePrompt(prompt, skills) });
 
   // Agent loop: until desired result is accomplished
   while (true) {
