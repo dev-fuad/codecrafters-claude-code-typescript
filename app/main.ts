@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources";
 import { toolFunctions, tools } from "./tools";
+import { getSkillsPrompt, listSkills } from "./skills";
 
 async function main() {
   const [, , flag, prompt] = process.argv;
@@ -20,9 +21,16 @@ async function main() {
     baseURL: baseURL,
   });
 
-  const messages: ChatCompletionMessageParam[] = [
-    { role: "user", content: prompt },
-  ];
+  const messages: ChatCompletionMessageParam[] = [];
+
+  const skills = await listSkills();
+  const skillsPrompt = getSkillsPrompt(skills);
+
+  if (skillsPrompt) {
+    messages.push({ role: "system", content: skillsPrompt });
+  }
+
+  messages.push({ role: "user", content: prompt });
 
   // Agent loop: until desired result is accomplished
   while (true) {
