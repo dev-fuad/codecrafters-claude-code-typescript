@@ -1,7 +1,7 @@
 import { $ } from "bun";
-import type {
-  ChatCompletionFunctionTool,
-} from "openai/resources";
+import type { ChatCompletionFunctionTool } from "openai/resources";
+import { replaceArguments } from "./parsePrompt";
+import { listSkills } from "./skills";
 
 const ReadTool: ChatCompletionFunctionTool = {
   type: "function",
@@ -61,7 +61,26 @@ const BashTool: ChatCompletionFunctionTool = {
   },
 };
 
-export const tools = [ReadTool, WriteTool, BashTool];
+const SkillTool: ChatCompletionFunctionTool = {
+  type: "function",
+  function: {
+    name: "Skill",
+    description: "Load a skill's instructions into the conversation",
+    parameters: {
+      type: "object",
+      required: ["name"],
+      properties: {
+        name: { type: "string", description: "The name of the skill to use" },
+        args: {
+          type: "string",
+          description: "Optional arguments for the skill",
+        },
+      },
+    },
+  },
+};
+
+export const tools = [ReadTool, WriteTool, BashTool, SkillTool];
 
 export const toolFunctions = {
   [ReadTool.function.name]: async ({ file_path }: { file_path: string }) => {
@@ -79,10 +98,21 @@ export const toolFunctions = {
     return content;
   },
   [BashTool.function.name]: async ({ command }: { command: string }) => {
-    const { stdout, stderr, exitCode } = await $`bash -c "${command}"`.nothrow().quiet();
+    const { stdout, stderr, exitCode } = await $`bash -c "${command}"`
+      .nothrow()
+      .quiet();
     if (exitCode !== 0) {
       return stderr.toString();
     }
     return stdout.toString();
   },
+  [SkillTool.function.name]: async ({ name, args }: { name: string, args: string }) => {
+    const tokens = args.trim().split(/\s+/s);
+    const skills = await listSkills();
+    const skill = skills.find((s) => s.name === name);
+    if (!skill) {
+      return "${name}: Skill not found"
+    }
+    return replaceArguments(skill.body, tokens);
+  }
 };

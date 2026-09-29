@@ -35,7 +35,7 @@ export const parsePrompt = (content: string, skills: Skill[]): ChatCompletionMes
   return [{ role: "user", content }];
 };
 
-function replaceArguments(body: string, args: string[]): string {
+export function replaceArguments(body: string, args: string[]): string {
   const regex = /\$ARGUMENTS(?:\[\d+\])?|\$\d+/g;
 
   return body.replace(regex, (match) => {

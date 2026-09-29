@@ -59,6 +59,6 @@ export const getSkillsPrompt = (skills: Skill[]) => {
   }
 
   const skillsStrings = skills.map((skill) => `- ${skill.name}: ${skill.description}`);
-  return `You have access to following skills:\n\n${skillsStrings.join('\n')}`;
+  return `You have access to following skills:\n\n${skillsStrings.join('\n')}\n\nIf a skill matches the user's request, call the Skill tool with its name and follow the instructions it returns.`;
 };
 
