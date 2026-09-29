@@ -22,7 +22,7 @@ export const parsePrompt = (content: string, skills: Skill[]): ChatCompletionMes
     const args = tokens.slice(skillsUsed.length);
     if (skillsUsed.length > 0) {
       const messages: ChatCompletionMessageParam[] = skillsUsed.map((skillUsed) => {
-        const skillPathString = `Skill: ${skillUsed.name} (located at .claude/skills/${skillUsed.name})\nPaths in the instructions below are relative to that folder.\n\n`;
+        const skillPathString = `Skill: ${skillUsed.name} (located at ${skillUsed.path})\nPaths in the instructions below are relative to that folder.\n\n`;
         return {
           role: "user",
           content: skillPathString + replaceArguments(skillUsed.body, args),

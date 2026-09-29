@@ -6,6 +6,7 @@ export type Skill = {
   name: string;
   description: string;
   body: string;
+  path: string;
 };
 
 export const listSkills = async (root = ".claude/skills") => {
@@ -45,6 +46,7 @@ export const listSkills = async (root = ".claude/skills") => {
       name,
       description,
       body,
+      path: skillPath,
     });
   }
 
