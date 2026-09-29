@@ -53,8 +53,6 @@ async function main() {
       messages.push(message);
 
       if (message?.tool_calls && message.tool_calls.length > 0) {
-        console.error('>>> tc', message.tool_calls);
-        console.error('>>> msgs', messages);
         message.tool_calls.forEach(async (tool_call) => {
           if (tool_call.type === "function") {
             const parameters = JSON.parse(tool_call.function.arguments);
