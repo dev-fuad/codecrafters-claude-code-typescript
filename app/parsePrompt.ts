@@ -9,11 +9,15 @@ export const parsePrompt = (content: string, skills: Skill[]): ChatCompletionMes
       .trim()
       .split(/\s+/s);
 
+    console.error('>>> ts', tokens);
     const skillsUsed: Skill[] = [];
     for (const token of tokens) {
+      console.error('>>> t', token);
       if (token.startsWith("/")) {
         const skillName = token.slice(1);
+        console.error('>>> sN', skillName);
         const skill = skills.find((s) => s.name === skillName);
+        console.error(skill);
         if (skill) {
           skillsUsed.push(skill);
           continue;
