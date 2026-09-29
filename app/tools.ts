@@ -106,13 +106,13 @@ export const toolFunctions = {
     }
     return stdout.toString();
   },
-  [SkillTool.function.name]: async ({ name, args }: { name: string, args: string }) => {
-    const tokens = args.trim().split(/\s+/s);
+  [SkillTool.function.name]: async ({ name, args }: { name: string, args?: string }) => {
+    const tokens = args?.trim().split(/\s+/s);
     const skills = await listSkills();
     const skill = skills.find((s) => s.name === name);
     if (!skill) {
       return "${name}: Skill not found"
     }
-    return replaceArguments(skill.body, tokens);
+    return tokens ? replaceArguments(skill.body, tokens) : skill.body;
   }
 };
