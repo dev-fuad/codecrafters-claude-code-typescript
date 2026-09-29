@@ -5,7 +5,6 @@ export const parsePrompt = (content: string, skills: Skill[]): ChatCompletionMes
   console.error('>>>', content, skills);
   if (content.startsWith("/")) {
     const tokens = content
-      .slice(1)
       .trim()
       .split(/\s+/s);
 
