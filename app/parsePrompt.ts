@@ -1,19 +1,37 @@
+import type { ChatCompletionMessageParam } from "openai/resources";
 import type { Skill } from "./skills";
 
-export const parsePrompt = (content: string, skills: Skill[]) => {
+export const parsePrompt = (content: string, skills: Skill[]): ChatCompletionMessageParam[] => {
   if (content.startsWith("/")) {
-    const [skillName, ...args] = content
+    const tokens = content
       .slice(1)
       .trim()
       .split(/\s+/s);
 
-    const skill = skills.find((s) => s.name === skillName);
-    if (skill) {
-      return replaceArguments(skill.body, args);
+    const skillsUsed: Skill[] = [];
+    for (const token of tokens) {
+      if (token.startsWith("/")) {
+        const skillName = token.slice(1);
+        const skill = skills.find((s) => s.name === skillName);
+        if (skill) {
+          skillsUsed.push(skill);
+          continue;
+        }
+      }
+      break;
+    }
+    
+    const args = tokens.slice(skillsUsed.length);
+    if (skillsUsed.length > 0) {
+      const messages: ChatCompletionMessageParam[] = skillsUsed.map((skillUsed) => ({
+        role: "user",
+        content: replaceArguments(skillUsed.body, args),
+      }));
+      return messages;
     }
   }
 
-  return content;
+  return [{ role: "user", content }];
 };
 
 function replaceArguments(body: string, args: string[]): string {

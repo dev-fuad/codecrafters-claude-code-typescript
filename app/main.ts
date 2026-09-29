@@ -31,7 +31,7 @@ async function main() {
     messages.push({ role: "system", content: skillsPrompt });
   }
 
-  messages.push({ role: "user", content: parsePrompt(prompt, skills) });
+  messages.push(...parsePrompt(prompt, skills));
 
   // Agent loop: until desired result is accomplished
   while (true) {
