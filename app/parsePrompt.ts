@@ -22,10 +22,9 @@ export const parsePrompt = (content: string, skills: Skill[]): ChatCompletionMes
     const args = tokens.slice(skillsUsed.length);
     if (skillsUsed.length > 0) {
       const messages: ChatCompletionMessageParam[] = skillsUsed.map((skillUsed) => {
-        const skillPathString = `Skill: ${skillUsed.name} (located at ${skillUsed.path})\nPaths in the instructions below are relative to that folder.\n\n`;
         return {
           role: "user",
-          content: skillPathString + replaceArguments(skillUsed.body, args),
+          content: getContentFromSkill(skillUsed, args),
         };
       });
       return messages;
@@ -34,6 +33,14 @@ export const parsePrompt = (content: string, skills: Skill[]): ChatCompletionMes
 
   return [{ role: "user", content }];
 };
+
+export function getContentFromSkill(skill: Skill, args?: string[]) {
+  const skillPathString = `Skill: ${skill.name} (located at ${skill.path})\nPaths in the instructions below are relative to that folder.\n\n`;
+  if (args?.length) {
+    return skillPathString + replaceArguments(skill.body, args);
+  }
+  return skillPathString + skill.body;
+}
 
 export function replaceArguments(body: string, args: string[]): string {
   const regex = /\$ARGUMENTS(?:\[\d+\])?|\$\d+/g;

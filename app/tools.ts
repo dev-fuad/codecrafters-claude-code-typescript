@@ -1,7 +1,8 @@
 import { $ } from "bun";
 import type { ChatCompletionFunctionTool } from "openai/resources";
-import { replaceArguments } from "./parsePrompt";
+import { getContentFromSkill } from "./parsePrompt";
 import { listSkills } from "./skills";
+import { agentLoop } from "./agentLoop";
 
 const ReadTool: ChatCompletionFunctionTool = {
   type: "function",
@@ -113,6 +114,10 @@ export const toolFunctions = {
     if (!skill) {
       return "${name}: Skill not found"
     }
-    return tokens ? replaceArguments(skill.body, tokens) : skill.body;
+    const content = getContentFromSkill(skill, tokens);
+    if (skill.context === "fork") {
+      return await agentLoop([{ role: "user", content }]);
+    }
+    return content;
   }
 };

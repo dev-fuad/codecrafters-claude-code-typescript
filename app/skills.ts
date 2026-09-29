@@ -1,10 +1,12 @@
 import { readdir, exists } from "node:fs/promises";
 import path from "path";
-import { getString, parseFrontmatter } from "./frontmatter";
+import { getContext, getString, parseFrontmatter } from "./frontmatter";
 
 export type Skill = {
   name: string;
   description: string;
+  /** `fork` runs the skill in a subagent with a conversation of its own. */
+  context: "fork" | undefined;
   body: string;
   path: string;
 };
@@ -41,10 +43,12 @@ export const listSkills = async (root = ".claude/skills") => {
     const { frontmatter, body } = parsedSkill;
     const name = getString(frontmatter, "name") ?? skillDirectory.name;
     const description = getString(frontmatter, "description") ?? "";
+    const context = getContext(frontmatter, "context");
 
     skills.push({
       name,
       description,
+      context,
       body,
       path: skillPath,
     });

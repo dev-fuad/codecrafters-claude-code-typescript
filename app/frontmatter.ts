@@ -24,3 +24,7 @@ export const getString = <T extends Record<string, unknown>>(record: T, key: str
   return typeof record[key] === "string" ? record[key] : undefined;
 };
 
+export const getContext = <T extends Record<string, unknown>>(record: T, key: string) => {
+  return typeof record[key] === "string" && record[key] === "fork" ? record[key] : undefined;
+};
+
