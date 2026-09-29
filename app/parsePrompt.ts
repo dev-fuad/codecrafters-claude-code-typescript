@@ -9,7 +9,7 @@ export const parsePrompt = (content: string, skills: Skill[]) => {
 
     const skill = skills.find((s) => s.name === skillName);
     if (skill) {
-      return replaceArguments(content, args);
+      return replaceArguments(skill.body, args);
     }
   }
 
