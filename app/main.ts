@@ -27,6 +27,7 @@ async function main() {
   const skillsPrompt = getSkillsPrompt(skills);
 
   if (skillsPrompt) {
+    console.error(skillsPrompt);
     messages.push({ role: "system", content: skillsPrompt });
   }
 
