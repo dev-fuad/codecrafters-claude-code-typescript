@@ -54,6 +54,7 @@ async function main() {
 
       if (message?.tool_calls && message.tool_calls.length > 0) {
         message.tool_calls.forEach(async (tool_call) => {
+          console.error('>>> tc', tool_call);
           if (tool_call.type === "function") {
             const parameters = JSON.parse(tool_call.function.arguments);
             const fileContent =
