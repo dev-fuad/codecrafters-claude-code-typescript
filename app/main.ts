@@ -1,91 +1,6 @@
-import { $ } from "bun";
 import OpenAI from "openai";
-import type {
-  ChatCompletionFunctionTool,
-  ChatCompletionMessageParam,
-} from "openai/resources";
-
-const ReadTool: ChatCompletionFunctionTool = {
-  type: "function",
-  function: {
-    name: "Read",
-    description: "Read and return the contents of a file",
-    parameters: {
-      type: "object",
-      properties: {
-        file_path: {
-          type: "string",
-          description: "The path to the file to read",
-        },
-      },
-      required: ["file_path"],
-    },
-  },
-};
-
-const WriteTool: ChatCompletionFunctionTool = {
-  type: "function",
-  function: {
-    name: "Write",
-    description: "Write content to a file",
-    parameters: {
-      type: "object",
-      properties: {
-        file_path: {
-          type: "string",
-          description: "The path of the file to write to",
-        },
-        content: {
-          type: "string",
-          description: "The content to write to the file",
-        },
-      },
-      required: ["file_path", "content"],
-    },
-  },
-};
-
-const BashTool: ChatCompletionFunctionTool = {
-  type: "function",
-  function: {
-    name: "Bash",
-    description: "Execute a shell command",
-    parameters: {
-      type: "object",
-      required: ["command"],
-      properties: {
-        command: {
-          type: "string",
-          description: "The command to execute",
-        },
-      },
-    },
-  },
-};
-
-const toolFunctions = {
-  [ReadTool.function.name]: async ({ file_path }: { file_path: string }) => {
-    const file = Bun.file(file_path);
-    return await file.text();
-  },
-  [WriteTool.function.name]: async ({
-    file_path,
-    content,
-  }: {
-    file_path: string;
-    content: string;
-  }) => {
-    await Bun.write(file_path, content);
-    return content;
-  },
-  [BashTool.function.name]: async ({ command }: { command: string }) => {
-    const { stdout, stderr, exitCode } = await $`bash -c "${command}"`.nothrow().quiet();
-    if (exitCode !== 0) {
-      return stderr.toString();
-    }
-    return stdout.toString();
-  },
-};
+import type { ChatCompletionMessageParam } from "openai/resources";
+import { toolFunctions, tools } from "./tools";
 
 async function main() {
   const [, , flag, prompt] = process.argv;
@@ -109,13 +24,13 @@ async function main() {
     { role: "user", content: prompt },
   ];
 
+  // Agent loop: until desired result is accomplished
   while (true) {
-    console.error(messages);
     try {
       const response = await client.chat.completions.create({
         model: "anthropic/claude-haiku-4.5",
         messages,
-        tools: [ReadTool, WriteTool, BashTool],
+        tools,
       });
 
       if (!response.choices || response.choices.length === 0) {
@@ -134,7 +49,6 @@ async function main() {
             const parameters = JSON.parse(tool_call.function.arguments);
             const fileContent =
               await toolFunctions[tool_call.function.name]?.(parameters);
-            // console.log(fileContent);
             messages.push({
               role: "tool",
               tool_call_id: tool_call.id,
