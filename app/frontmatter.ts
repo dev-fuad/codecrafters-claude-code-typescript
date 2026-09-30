@@ -1,4 +1,4 @@
-import { parse } from "yaml";
+import { YAML } from "bun";
 
 export const parseFrontmatter = <T extends Record<string, unknown>>(content: string): { ok: true, frontmatter: T, body: string } | { ok: false, error: unknown } => {
   try {
@@ -14,7 +14,7 @@ export const parseFrontmatter = <T extends Record<string, unknown>>(content: str
     const frontmatterString = normalised.slice(4, endIndex);
     const body = normalised.slice(endIndex + 4);
 
-    return { ok: true, frontmatter: parse(frontmatterString) as T, body };
+    return { ok: true, frontmatter: YAML.parse(frontmatterString) as T, body };
   } catch (error) {
     return { ok: false, error };
   }
